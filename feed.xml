@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.8.5">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2018-12-09T10:22:51-05:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Dillon Beliveau</title><subtitle>Blog of a software engineer in Vermont.</subtitle><entry><title type="html">AWS ECS IAM Roles: Demystified</title><link href="http://localhost:4000/2018/12/08/aws-ecs-iam-roles-demystified.html" rel="alternate" type="text/html" title="AWS ECS IAM Roles: Demystified" /><published>2018-12-08T00:00:00-05:00</published><updated>2018-12-08T00:00:00-05:00</updated><id>http://localhost:4000/2018/12/08/aws-ecs-iam-roles-demystified</id><content type="html" xml:base="http://localhost:4000/2018/12/08/aws-ecs-iam-roles-demystified.html">&lt;p&gt;To run tasks in ECS, up to four different roles are required. Which ones you need depends on a variety of factors. Probably the most frustrating thing for me when getting started with ECS was confusion around which of these roles needed what permissions, the purpose of each of them, how to create them, what components of the system used them, and where to configure them. This post does not attempt to be a complete introduction or reference to ECS in general, just a source to hopefully clear up confusion around IAM and ECS.&lt;/p&gt;
+&lt;h2&gt;Role Types&lt;/h2&gt;
+&lt;h3&gt;Host Role&lt;/h3&gt;
+&lt;p&gt;When running ECS on EC2, the EC2 instances hosting the containers need a role. This role gives them permission to, among other things, pull images from ECR, manage tasks in the ECS API, and put logs into cloudwatch.&lt;/p&gt;
+&lt;h3&gt;Task Execution Role&lt;/h3&gt;
+&lt;p&gt;When running in Fargate, there are no EC2 instances hosting your containers, so these permissions have to go somewhere. This is called a &lt;i&gt;Task Execution Role.&lt;/i&gt; It gives the Fargate service the same permissions the EC2 instance would need. This role is &lt;i&gt;not&lt;/i&gt; required when running tasks on EC2 backed ECS.&lt;/p&gt;
+&lt;h3&gt;ECS Service-Linked Role&lt;/h3&gt;
+&lt;p&gt;This is a role used by the ECS service itself to perform functions such as managing load balancer configuration, doing service discovery, as well as attaching network interfaces when using the `awsvpc` network mode.
+  There is only one of these per account.&lt;/p&gt;
+&lt;h3&gt;ECS Task Role (or Container Role)&lt;/h3&gt;
+&lt;p&gt;Not to be confused with the Task &lt;i&gt;Execution&lt;/i&gt; Role, the Task Role is used when code running inside the container needs access to AWS resources. This is equivalent to the instance profile if the code was running directly on an EC2 instance.&lt;/p&gt;
+&lt;h2&gt;Creating the Required Roles in an ALKS-Controlled Account&lt;/h2&gt;
+&lt;p&gt;At my company, we use a tool called ALKS to manage access to and permissions in our AWS accounts. We open sourced a &lt;a href=&quot;https://github.com/Cox-Automotive/terraform-provider-alks&quot;&gt;Terraform provider&lt;/a&gt; for it, and that&amp;#8217;s what my examples will be using. If needed, find another source for how to create the roles and use these examples for information on what policies to attach.&lt;/p&gt;
+&lt;h3&gt;Host Role&lt;/h3&gt;
+&lt;p&gt;This will be a standard IAM Role. First create the role itself:&lt;/p&gt;
+&lt;pre class=&quot;src&quot; lang=&quot;terraform&quot;&gt;
+resource &amp;quot;alks_iamrole&amp;quot; &amp;quot;ecs_host&amp;quot; {
+  name                     = &amp;quot;ecs-host-role&amp;quot;
+  type                     = &amp;quot;Amazon EC2&amp;quot;
+  include_default_policies = false
+}
+&lt;/pre&gt;
+&lt;p&gt;If you use multiple clusters, you can prefix it with the name of your cluster, creating a `flume-ecs-host-role` for example.&lt;/p&gt;
+&lt;p&gt;Then attach the required policy:&lt;/p&gt;
+&lt;pre class=&quot;src&quot; lang=&quot;terraform&quot;&gt;
+resource &amp;quot;aws_iam_role_policy_attachment&amp;quot; &amp;quot;ecs_host_ecs_attachment&amp;quot; {
+  role       = &amp;quot;${alks_iamrole.ecs_host.name}&amp;quot;
+  policy_arn = &amp;quot;arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role&amp;quot;
+}
+&lt;/pre&gt;
+&lt;p&gt;This is an AWS Managed policy, so there&amp;#8217;s no need to create it.&lt;/p&gt;
+&lt;h3&gt;Task Execution Role&lt;/h3&gt;
+&lt;p&gt;Create a role with the type &amp;#8220;Amazon EC2 Container Service Task Role&amp;#8221; and attach the AWS provided policy to it.&lt;/p&gt;
+&lt;pre class=&quot;src&quot; lang=&quot;terraform&quot;&gt;
+resource &amp;quot;alks_iamrole&amp;quot; &amp;quot;task_execution_role&amp;quot; {
+  name                     = &amp;quot;ecsTaskExecutionRole&amp;quot;
+  type                     = &amp;quot;Amazon EC2 Container Service Task Role&amp;quot;
+  include_default_policies = false
+}
+
+resource &amp;quot;aws_iam_role_policy_attachment&amp;quot; &amp;quot;task_execution_attachment&amp;quot; {
+  policy_arn = &amp;quot;arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy&amp;quot; // AWS provided policy
+  role       = &amp;quot;${alks_iamrole.task_execution_role.name}&amp;quot;
+}
+&lt;/pre&gt;
+&lt;h3&gt;Service Linked Role&lt;/h3&gt;
+&lt;p&gt;Normally, this role would be created automatically the first time it&amp;#8217;s needed. However, if your account is as locked down as my account at work is, you&amp;#8217;ll need to create it manually from a privileged login.&lt;/p&gt;
+&lt;p&gt;Provide the AWS cli with credentials that have permission to create roles, and run:&lt;/p&gt;
+&lt;pre class=&quot;src&quot; lang=&quot;bash&quot;&gt;
+$ aws iam create-service-linked-role --aws-service-name ecs.amazonaws.com
+&lt;/pre&gt;
+&lt;p&gt;This only needs to be run once per account. Once the role is created you&amp;#8217;ll never have to worry about it again, and you won&amp;#8217;t even have to refer to it in any Terraform or other configuration. The ECS service will just use it if it exists.&lt;/p&gt;
+&lt;h3&gt;Task Role&lt;/h3&gt;
+&lt;p&gt;Create a role as normal, but give it the type of &amp;#8220;Amazon EC2 Container Service Task Role&amp;#8221;&lt;/p&gt;
+&lt;pre class=&quot;src&quot; lang=&quot;terraform&quot;&gt;
+resource &amp;quot;alks_iamrole&amp;quot; &amp;quot;config_services_container&amp;quot; {
+  name                     = &amp;quot;application-name-container-role&amp;quot;
+  type                     = &amp;quot;Amazon EC2 Container Service Task Role&amp;quot;
+  include_default_policies = false
+} 
+&lt;/pre&gt;
+&lt;p&gt;There are no required attachments or other settings here. Just name it something that makes sense and attach the policies you need to it.&lt;/p&gt;
+&lt;h3&gt;What about through the UI?&lt;/h3&gt;
+&lt;p&gt;While it&amp;#8217;s certainly possible to do all this through the UI, I highly recommend using a tool like Terraform to manage configuration and permissions.&lt;/p&gt;
+&lt;p&gt;Create the roles with the correct &amp;#8220;type&amp;#8221; in the UI, and attach the required policies to them. You should use Terraform though.&lt;/p&gt;
+&lt;h2&gt;Terraforming Services and Tasks&lt;/h2&gt;
+&lt;p&gt;Here&amp;#8217;s a quick overview of which roles go where when terraforming resources. The Terraform documentation is very good for the properties I&amp;#8217;m leaving out. See docs for &lt;a href=&quot;https://www.terraform.io/docs/providers/aws/r/instance.html&quot;&gt;EC2 instance&lt;/a&gt; and &lt;a href=&quot;https://www.terraform.io/docs/providers/aws/r/ecs_task_definition.html&quot;&gt;ECS task definition&lt;/a&gt;.&lt;/p&gt;
+&lt;pre class=&quot;src&quot; lang=&quot;terraform&quot;&gt;
+resource &amp;quot;aws_instance&amp;quot; &amp;quot;ecs_host_instance&amp;quot; {
+  iam_instance_profile = &amp;quot;${var.host_role_name}&amp;quot; // This is the Host Role, applied to the cluster instances. This is required to allow your host access to manage tasks.
+}
+
+resource &amp;quot;aws_ecs_task_definition&amp;quot; &amp;quot;ecs_task_definition&amp;quot; {
+  execution_role_arn = &amp;quot;${var.task_execution_role_arn}&amp;quot; // This is the Task Execution Role, only required on Fargate. Called &amp;quot;ecsTaskExecutionRole&amp;quot; above.
+  task_role_arn      = &amp;quot;${var.container_role_arn}&amp;quot; // This is the Task Role, or Container Role. This is required only if code running in your container needs access to AWS services.
+}
+&lt;/pre&gt;
+&lt;h2&gt;Which IAM Role will my code run as?&lt;/h2&gt;
+&lt;p&gt;Assuming your code is using a recent version of the AWS SDK with the default credentials provider chain, i.e. not explicitly specifying where credentials are coming from, it will first attempt to get credentials from the &lt;i&gt;ECS Task Role&lt;/i&gt;. If that fails, it will fall back to the &lt;i&gt;Host Role&lt;/i&gt;.&lt;/p&gt;
+&lt;p&gt;Note: Certain versions of Hadoop and services running on top of it like Flume, for example, will pull in the &lt;i&gt;Host Role&lt;/i&gt; no matter what. If, like on Fargate, there is no Host Role, Flume will not be able to find credentials.&lt;/p&gt;
+&lt;h3&gt;Sources:&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;https://serverfault.com/questions/854413/confused-by-the-role-requirement-of-ecs/854467#854467&lt;/li&gt;
+  &lt;li&gt;https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_execution_IAM_role.html&lt;/li&gt;
+  &lt;li&gt;https://docs.aws.amazon.com/AmazonECS/latest/developerguide/instance_IAM_role.html&lt;/li&gt;
+  &lt;li&gt;https://github.com/Cox-Automotive/terraform-provider-alks/blob/master/README.md&lt;/li&gt;
+&lt;/ul&gt;</content><author><name></name></author><category term="aws ecs docker iam role task execution containers terraform" /></entry></feed>
