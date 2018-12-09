@@ -128,7 +128,7 @@ Note: Certain versions of Hadoop and services running on top of it like Flume, f
 
 *** Sources:
 
-- https://serverfault.com/questions/854413/confused-by-the-role-requirement-of-ecs/854467#854467
-- https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_execution_IAM_role.html
-- https://docs.aws.amazon.com/AmazonECS/latest/developerguide/instance_IAM_role.html
-- https://github.com/Cox-Automotive/terraform-provider-alks/blob/master/README.md
+- [[https://serverfault.com/questions/854413/confused-by-the-role-requirement-of-ecs/854467#854467]]
+- [[https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_execution_IAM_role.html]]
+- [[https://docs.aws.amazon.com/AmazonECS/latest/developerguide/instance_IAM_role.html]]
+- [[https://github.com/Cox-Automotive/terraform-provider-alks/blob/master/README.md]]
