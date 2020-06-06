@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.5.0 -->
+<title>GameBoy Advance Cartridge Backup Storage | Dillon Beliveau</title>
+<meta name="generator" content="Jekyll v3.8.5" />
+<meta property="og:title" content="GameBoy Advance Cartridge Backup Storage" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Blog of a software engineer in Vermont." />
+<meta property="og:description" content="Blog of a software engineer in Vermont." />
+<link rel="canonical" href="https://dillonbeliveau.com/2020/06/05/GBA-FLASH.html" />
+<meta property="og:url" content="https://dillonbeliveau.com/2020/06/05/GBA-FLASH.html" />
+<meta property="og:site_name" content="Dillon Beliveau" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2020-06-05T00:00:00-04:00" />
+<script type="application/ld+json">
+{"description":"Blog of a software engineer in Vermont.","url":"https://dillonbeliveau.com/2020/06/05/GBA-FLASH.html","@type":"BlogPosting","dateModified":"2020-06-05T00:00:00-04:00","datePublished":"2020-06-05T00:00:00-04:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://dillonbeliveau.com/2020/06/05/GBA-FLASH.html"},"headline":"GameBoy Advance Cartridge Backup Storage","@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://dillonbeliveau.com/feed.xml" title="Dillon Beliveau" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Dillon Beliveau</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">GameBoy Advance Cartridge Backup Storage</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2020-06-05T00:00:00-04:00" itemprop="datePublished">Jun 5, 2020
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+     <h1>Introduction</h1>
+<p>I&#8217;m writing this post because I had some difficulty understanding the wonderful <a href="http://problemkaputt.de/gbatek.htm#gbacartbackupids">GBATek</a>&#8217;s documentation on the different backup storage types GameBoy Advance games could use while working on my emulator. Hopefully, this information will be useful to someone.</p>
+<p>As the GBA did not have any internal persistant storage like modern consoles do, if a game developer wanted to implement a save feature in their game, they had to package storage directly inside the cartridge.</p>
+<p>The cartridges could ship with several different types of backup storage. These included <a href="https://en.wikipedia.org/wiki/Static_random-access_memory">SRAM</a>, <a href="https://en.wikipedia.org/wiki/Flash_memory">Flash</a>, and <a href="https://en.wikipedia.org/wiki/EEPROM">EEPROM</a>. In general, flash can be considered a type of EEPROM, but for the purposes of this article and the GBA, they are two separate categories, because they are read and written with two separate protocols.</p>
+<h1>What type of backup does my cartridge use?</h1>
+<p>Standard GBA cartridge dumps will (usually) include the type of backup storage they use as text somewhere in the file. This is a <i>good enough</i> way of determining the type.</p>
+<p>To identify the cartridge&#8217;s type, search the entire ROM for one of the following strings in this table:</p>
+<table>
+  <tr><th>String</th><th>Backup Type</th></tr>
+  <tr><td>EEPROM_</td><td>Cartridge uses EEPROM. Either 512 bytes or 8KB</td></tr>
+  <tr><td>SRAM_</td><td>Cartridge uses SRAM</td></tr>
+  <tr><td>FLASH_</td><td>Flash 64 kilobytes / 512 kilobits</td></tr>
+  <tr><td>FLASH512_</td><td>Flash 64 kilobytes / 512 kilobits</td></tr>
+  <tr><td>FLASH1M_</td><td>Flash 128 kilobytes / 1 megabit</td></tr>
+</table>
+<p>See <a href="http://problemkaputt.de/gbatek.htm#gbacartbackupids">GBATek</a> for more details.</p>
+<p>It sounds hacky, but that&#8217;s because it is.</p>
+<h1>SRAM</h1>
+<p>SRAM is by far the simplest type of backup storage, both for emulator developers and game developers. It&#8217;s simply another type of RAM, just one that happens to be on the cartridge instead of internal to the system. Unfortunately, it&#8217;s volatile, which means that if it loses power, your save data is gone. Cartridges that used SRAM included a built-in backup battery to keep the RAM powered, and your precious high scores in Pokémon Pinball: Ruby and Sapphire safe.</p>
+<p>I&#8217;m not going to go into too much detail here, as this is just RAM accessed like any other RAM, it just happens to be in the cartridge address space 0xE000000 through 0xE007FFF. Making this persistent in an emulator is as easy as persisting this space to disk, using either mmap or detecting changes and writing out a save.</p>
+<h1>Flash</h1>
+<h2>Introduction to Flash</h2>
+<p>See <a href="http://problemkaputt.de/gbatek.htm#gbacartbackupflashrom">the section in GBATek.</a></p>
+<p>Flash memory in GBA carts has the advantage of being non-volatile, meaning it doesn&#8217;t need a battery in the cartridge to keep your progress safe. The chips did have a limited number of write cycles, though this isn&#8217;t something an emulator developer needs to worry about.</p>
+<p>There were several chips that Nintendo used for Flash, all made by different manufacturers. GBATek lists them all.</p>
+<p><b>Important:</b> You do NOT need to simulate all the different chips! When a developer shipped their code off to Nintendo to be put in a cartridge, they did <b>NOT</b> know what type of chip it would be manufactured with! Different production runs of the same game could even use different manufacturer&#8217;s chips! As a consequence of this, all games should support <i>all Flash types.</i> I&#8217;m sure there are exceptions, but this means that your emulator need only support one type. I chose Sanyo for mine, as you can see below in the &#8220;Stubbing Flash&#8221; section.</p>
+<p>As a downside, accessing it is significantly more complicated than for SRAM. The main loop the game will use is made up of sending the chip commands, and taking actions.</p>
+<p>Because the commands and actions are taken separately, it can (and should) be implemented as a state machine. This means you&#8217;ll need to hold state somewhere of what the Flash chip is currently doing, and treat reads and writes differently based on this state.</p>
+<h2>Sending Flash commands</h2>
+<p>Commands are sent by 3 separate, sequential 8-bit writes to memory.</p>
+<ul>
+  <li>0xAA to 0xE005555</li>
+  <li>0x55 to 0xE002AAA</li>
+  <li>The byte representing the command to 0xE005555</li>
+</ul>
+<p>You can keep track of this by switching your state variable from READY to something like CMD_1 to track the 0xAA write, CMD_2 to track the 0x55 write, and then to a state specified by the command on the third write.</p>
+<h3>Relevant commands</h3>
+<p>Here&#8217;s a table of all the relevant commands you&#8217;ll need to implement. See below for more details. Note: I have omitted Atmel-specific commands. These are the only devices that differ in protocol used to communicate with them, and Nintendo supposedly stopped using them towards the end of the GBA&#8217;s lifetime. As far as I know, there are no games that require them. I&#8217;ve also omitted the Macronix-only &#8220;terminate command after timeout&#8221; command.</p>
+<p>Unless specified, the chip returns to &#8220;ready&#8221; state after every command.</p>
+<table>
+  <tr><th>8-bit write to 0xE005555</th><th>Command</th><th>Notes</th></tr>
+  <tr><td>0x90</td><td>Enter &#8220;Chip identification mode&#8221;</td><td>In chip identification mode, the data in 0x0E000000 and 0x0E000001 are replaced by the flash chip&#8217;s manufacturer and device ID, as specified in the &#8220;Stubbing Flash&#8221; section below.</td></tr>
+  <tr><td>0xF0</td><td>Exit &#8220;Chip identification mode&#8221;</td><td>Return the chip back to READY mode.</td></tr>
+  <tr><td>0x80</td><td>Prepare to receive erase command</td><td>Next command must be one of the following two erase commands.</td></tr>
+  <tr><td>0x10</td><td>Erase entire chip</td><td>MUST be preceded by a &#8216;prepare to receive erase command&#8217;</td></tr>
+  <tr><td>0x30</td><td>Erase 4 kilobyte sector</td><td>MUST be preceded by a &#8216;prepare to receive erase command.&#8217; The address of the third write is also different than the other commands, and meaningful. See below. Only available on non-Atmel chips.</td></tr>
+  <tr><td>0xA0</td><td>Prepare to write single data byte</td><td>Next write must be a write of a single byte. Only available on non-Atmel chips.</td></tr>
+  <tr><td>0xB0</td><td>Bank switch</td><td>Only works on 128KB flash devices, which are represented as two 64KB banks. 64KB flash devices don&#8217;t support bank switching, for reasons that should be obvious.</td></tr>
+</table>
+<h3>0x90 Enter Chip Identification mode</h3>
+<p>In chip identification mode, the data in 0x0E000000 and 0x0E000001 are replaced by the flash chip&#8217;s manufacturer and device ID, as specified in the &#8220;Stubbing Flash&#8221; section below.
+  The chip stays in this mode until the &#8220;exit chip identification mode&#8221; command is issued.</p>
+<p>As far as I know, the game can issue other commands while in this mode, so for that purpose it should be treated the same as &#8220;ready&#8221; mode.</p>
+<h3>0xF0 Exit Chip Identification mode</h3>
+<p>When this command is issued, the device returns to &#8220;ready&#8221; mode, and reads from the first two addresses are normal again.</p>
+<h3>0x80 Prepare to receive erase command</h3>
+<p>This command must be issued before issuing one of the two erase commands specified below. In fact, the next command <i>must</i> be an erase command.</p>
+<h3>0x10 Erase entire chip</h3>
+<p>Erases the entire chip. Note that this is not done with zeroes, but every byte in memory will equal 0xFF when done. This normally takes a decent amount of time, but it&#8217;s probably fine to do it instantly. The game will wait until a read from 0x0E000000 returns 0xFF, so if you want to go for some kind of cycle-accuracy here, make sure to erase that byte last.</p>
+<h3>0x30 Erase 4KB sector</h3>
+<p>Instead of the standard 0xE005555, 0xE002AAA, 0xE005555 sequence that every other command uses, this one is a little special.</p>
+<p>The first two writes happen normally. However, instead of the third write being to 0xE005555, the game will write 0x30 to 0x0E00n000, where n is a number representing the page to be erased.</p>
+<p>For example, if the game writes 0x30 to 0x0E005000, then all bytes from 0x0E005000 through 0x0E005FFF should be erased, and replaced with 0xFF (same value as in the above command. Flash chips erase to 0xFF, not to 0x00.)</p>
+<p>The game will then wait until the value at address 0x0E00n000 reads 0xFF. Again, if you&#8217;re trying for cycle accuracy here and not doing this all at once, erase this last.</p>
+<h3>0xA0 Prepare to write single data byte</h3>
+<p>After this command, the game should issue one write to a flash address between 0x0E000000 and 0x0E00FFFF. You can emulate this as happening instantly, but games will wait until that value appears before continuing.</p>
+<h3>0xB0 bank switch</h3>
+<p>This allows 128KB flash chips to expose their full size to the game, even though the address bus they&#8217;re connected to only supports 64KB of address space.
+  After issuing this command, the game will write either the value 0 or 1 to the address 0x0E000000. This determines which bank ALL commands that access the memory use.</p>
+<ul>
+  <li>Erase 4KB sector</li>
+  <li>Write single data byte</li>
+  <li>Data reads</li>
+</ul>
+<h2>Reading data out of Flash</h2>
+<p>This part is easy. A read from an address in Flash space reads that index in the flash backup. Any address between 0x0E000000 - 0x0E00FFFF will work. For 128KB devices, this takes into account the bank-switching mechanism. Note that when the chip is in &#8220;chip identification mode,&#8221; reads from the first and second address will return different data.</p>
+<h2>Note: Stubbing Flash</h2>
+<p>If you want to test games like Pokémon Emerald in your emulator, but aren&#8217;t quite ready for the <i>full experience</i> of implementing Flash, there&#8217;s a quick and easy way to stub it. Obviously, saving the game won&#8217;t work, but, assuming nothing else is wrong, you&#8217;ll be able to go in-game.</p>
+<p>In your memory bus, simply return the following values on 8-bit reads to the specified addresses.</p>
+<table>
+  <tr><th>8-bit read address</th><th>Value</th><th>Meaning</th></tr>
+  <tr><td>0x0E000000</td><td>0x62</td><td>Sanyo manufacturer ID</td></tr>
+  <tr><td>0x0E000001</td><td>0x13</td><td>Sanyo device ID</td></tr>
+</table>
+<p>And with that, you should have enough information to implement flash backups in your emulator.</p>
+<h1>EEPROM</h1>
+<p>Coming soon!</p>
+ 
+  </div><a class="u-url" href="/2020/06/05/GBA-FLASH.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Dillon Beliveau</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Dillon Beliveau</li><li><a class="u-email" href="mailto:dillonbeliveau@gmail.com">dillonbeliveau@gmail.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/Dillonb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">Dillonb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Blog of a software engineer in Vermont.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
