@@ -73,7 +73,7 @@ Unless specified, the chip returns to "ready" state after every command.
 |                     0x10 | Erase entire chip                 | MUST be preceded by a 'prepare to receive erase command'                                                                                                                                          |
 |                     0x30 | Erase 4 kilobyte sector           | MUST be preceded by a 'prepare to receive erase command.' The address of the third write is also different than the other commands, and meaningful. See below. Only available on non-Atmel chips. |
 |                     0xA0 | Prepare to write single data byte | Next write must be a write of a single byte. Only available on non-Atmel chips.                                                                                                                   |
-|                     0xB0 | Bank switch                       | Only works on 128KB flash devices, which are represented as two 64KB banks. 64KB flash devices don't support bank switching, for reasons that should be obvious.                                  |
+|                     0xB0 | Set memory bank                   | Only works on 128KB flash devices, which are represented as two 64KB banks. 64KB flash devices don't support bank switching, for reasons that should be obvious.                                  |
 
 *** 0x90 Enter Chip Identification mode
 In chip identification mode, the data in 0x0E000000 and 0x0E000001 are replaced by the flash chip's manufacturer and device ID, as specified in the "Stubbing Flash" section below.
@@ -102,13 +102,16 @@ The game will then wait until the value at address 0x0E00n000 reads 0xFF. Again,
 *** 0xA0 Prepare to write single data byte
 After this command, the game should issue one write to a flash address between 0x0E000000 and 0x0E00FFFF. You can emulate this as happening instantly, but games will wait until that value appears before continuing.
 
-*** 0xB0 bank switch
+*** 0xB0 Set memory bank
 This allows 128KB flash chips to expose their full size to the game, even though the address bus they're connected to only supports 64KB of address space.
 After issuing this command, the game will write either the value 0 or 1 to the address 0x0E000000. This determines which bank ALL commands that access the memory use.
 
 - Erase 4KB sector
 - Write single data byte
 - Data reads
+
+*** Special: Terminate write/erase command
+When a game determines it's been waiting long enough for a write to happen, it can terminate the wait period by writing 0xF0 to 0x0E005555. This is not part of any command sequence, but occurs as a single write. When this write happens after a write command has been issued and completed, it's safe to return the chip to Ready mode. If this write occurs while the chip is already in ready mode, it can be ignored.
 
 ** Reading data out of Flash
 This part is easy. A read from an address in Flash space reads that index in the flash backup. Any address between 0x0E000000 - 0x0E00FFFF will work. For 128KB devices, this takes into account the bank-switching mechanism. Note that when the chip is in "chip identification mode," reads from the first and second address will return different data.
