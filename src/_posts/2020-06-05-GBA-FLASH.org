@@ -14,15 +14,15 @@ The cartridges could ship with several different types of backup storage. These 
 
 Standard GBA cartridge dumps will (usually) include the type of backup storage they use as text somewhere in the file. This is a /good enough/ way of determining the type.
 
-To identify the cartridge's type, search the entire ROM for one of the following strings in this table:
+To identify the cartridge's type, search the entire ROM for one of the following strings in this table. This will work /most of the time/. There are a couple games where it won't, however. For better accuracy, you should use the regular expression in the Regex column, and for best accuracy, you should keep a game database that you manually update to match save types to games.
 
-| String    | Backup Type                                    |
-|-----------+------------------------------------------------|
-| EEPROM_   | Cartridge uses EEPROM. Either 512 bytes or 8KB |
-| SRAM_     | Cartridge uses SRAM                            |
-| FLASH_    | Flash 64 kilobytes / 512 kilobits              |
-| FLASH512_ | Flash 64 kilobytes / 512 kilobits              |
-| FLASH1M_  | Flash 128 kilobytes / 1 megabit                |
+| String    | Regex            | Backup Type                                    |
+|-----------+------------------+------------------------------------------------|
+| EEPROM_   | EEPROM_V\d\d\d   | Cartridge uses EEPROM. Either 512 bytes or 8KB |
+| SRAM_     | SRAM_V\d\d\d     | Cartridge uses SRAM                            |
+| FLASH_    | FLASH_V\d\d\d    | Flash 64 kilobytes / 512 kilobits              |
+| FLASH512_ | FLASH512_V\d\d\d | Flash 64 kilobytes / 512 kilobits              |
+| FLASH1M_  | FLASH1M_V\d\d\d  | Flash 128 kilobytes / 1 megabit                |
 
 See [[http://problemkaputt.de/gbatek.htm#gbacartbackupids][GBATek]] for more details.
 
