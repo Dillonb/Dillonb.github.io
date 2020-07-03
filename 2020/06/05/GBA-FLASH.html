@@ -51,14 +51,14 @@
 <p>The cartridges could ship with several different types of backup storage. These included <a href="https://en.wikipedia.org/wiki/Static_random-access_memory">SRAM</a>, <a href="https://en.wikipedia.org/wiki/Flash_memory">Flash</a>, and <a href="https://en.wikipedia.org/wiki/EEPROM">EEPROM</a>. In general, flash can be considered a type of EEPROM, but for the purposes of this article and the GBA, they are two separate categories, because they are read and written with two separate protocols.</p>
 <h1>What type of backup does my cartridge use?</h1>
 <p>Standard GBA cartridge dumps will (usually) include the type of backup storage they use as text somewhere in the file. This is a <i>good enough</i> way of determining the type.</p>
-<p>To identify the cartridge&#8217;s type, search the entire ROM for one of the following strings in this table:</p>
+<p>To identify the cartridge&#8217;s type, search the entire ROM for one of the following strings in this table. This will work <i>most of the time</i>. There are a couple games where it won&#8217;t, however. For better accuracy, you should use the regular expression in the Regex column, and for best accuracy, you should keep a game database that you manually update to match save types to games.</p>
 <table>
-  <tr><th>String</th><th>Backup Type</th></tr>
-  <tr><td>EEPROM_</td><td>Cartridge uses EEPROM. Either 512 bytes or 8KB</td></tr>
-  <tr><td>SRAM_</td><td>Cartridge uses SRAM</td></tr>
-  <tr><td>FLASH_</td><td>Flash 64 kilobytes / 512 kilobits</td></tr>
-  <tr><td>FLASH512_</td><td>Flash 64 kilobytes / 512 kilobits</td></tr>
-  <tr><td>FLASH1M_</td><td>Flash 128 kilobytes / 1 megabit</td></tr>
+  <tr><th>String</th><th>Regex</th><th>Backup Type</th></tr>
+  <tr><td>EEPROM_</td><td>EEPROM_V\d\d\d</td><td>Cartridge uses EEPROM. Either 512 bytes or 8KB</td></tr>
+  <tr><td>SRAM_</td><td>SRAM_V\d\d\d</td><td>Cartridge uses SRAM</td></tr>
+  <tr><td>FLASH_</td><td>FLASH_V\d\d\d</td><td>Flash 64 kilobytes / 512 kilobits</td></tr>
+  <tr><td>FLASH512_</td><td>FLASH512_V\d\d\d</td><td>Flash 64 kilobytes / 512 kilobits</td></tr>
+  <tr><td>FLASH1M_</td><td>FLASH1M_V\d\d\d</td><td>Flash 128 kilobytes / 1 megabit</td></tr>
 </table>
 <p>See <a href="http://problemkaputt.de/gbatek.htm#gbacartbackupids">GBATek</a> for more details.</p>
 <p>It sounds hacky, but that&#8217;s because it is.</p>
