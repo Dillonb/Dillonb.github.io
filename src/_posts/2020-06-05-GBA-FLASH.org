@@ -43,7 +43,7 @@ Flash memory in GBA carts has the advantage of being non-volatile, meaning it do
 
 There were several chips that Nintendo used for Flash, all made by different manufacturers. GBATek lists them all.
 
-*Important:* You do NOT need to simulate all the different chips! When a developer shipped their code off to Nintendo to be put in a cartridge, they did *NOT* know what type of chip it would be manufactured with! Different production runs of the same game could even use different manufacturer's chips! As a consequence of this, all games should support /all Flash types./ I'm sure there are exceptions, but this means that your emulator need only support one type. I chose Sanyo for mine, as you can see below in the "Stubbing Flash" section.
+*Important:* You do NOT need to simulate all the different chips! When a developer shipped their code off to Nintendo to be put in a cartridge, they did *NOT* know what type of chip it would be manufactured with! Different production runs of the same game could even use different manufacturer's chips! As a consequence of this, all games should support /all Flash types./ I'm sure there are exceptions, but this means that your emulator need only support one type per size. I chose Sanyo for 128K and Panasonic for 64K, as you can see below in the "Stubbing Flash" section.
 
 As a downside, accessing it is significantly more complicated than for SRAM. The main loop the game will use is made up of sending the chip commands, and taking actions.
 
@@ -65,15 +65,15 @@ Here's a table of all the relevant commands you'll need to implement. See below 
 
 Unless specified, the chip returns to "ready" state after every command.
 
-| 8-bit write to 0xE005555 | Command                           | Notes                                                                                                                                                                                             |
-|--------------------------+-----------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-|                     0x90 | Enter "Chip identification mode"  | In chip identification mode, the data in 0x0E000000 and 0x0E000001 are replaced by the flash chip's manufacturer and device ID, as specified in the "Stubbing Flash" section below.               |
-|                     0xF0 | Exit "Chip identification mode"   | Return the chip back to READY mode.                                                                                                                                                               |
-|                     0x80 | Prepare to receive erase command  | Next command must be one of the following two erase commands.                                                                                                                                     |
-|                     0x10 | Erase entire chip                 | MUST be preceded by a 'prepare to receive erase command'                                                                                                                                          |
-|                     0x30 | Erase 4 kilobyte sector           | MUST be preceded by a 'prepare to receive erase command.' The address of the third write is also different than the other commands, and meaningful. See below. Only available on non-Atmel chips. |
-|                     0xA0 | Prepare to write single data byte | Next write must be a write of a single byte. Only available on non-Atmel chips.                                                                                                                   |
-|                     0xB0 | Set memory bank                   | Only works on 128KB flash devices, which are represented as two 64KB banks. 64KB flash devices don't support bank switching, for reasons that should be obvious.                                  |
+| 8-bit write to 0xE005555 | Command                           | Notes                                                                                                                                                                                                                                |
+|--------------------------+-----------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|                     0x90 | Enter "Chip identification mode"  | In chip identification mode, the data in 0x0E000000 and 0x0E000001 are replaced by the flash chip's manufacturer and device ID, as specified in the "Stubbing Flash" section below. Remember to use a different ID for 64K and 128K! |
+|                     0xF0 | Exit "Chip identification mode"   | Return the chip back to READY mode.                                                                                                                                                                                                  |
+|                     0x80 | Prepare to receive erase command  | Next command must be one of the following two erase commands.                                                                                                                                                                        |
+|                     0x10 | Erase entire chip                 | MUST be preceded by a 'prepare to receive erase command'                                                                                                                                                                             |
+|                     0x30 | Erase 4 kilobyte sector           | MUST be preceded by a 'prepare to receive erase command.' The address of the third write is also different than the other commands, and meaningful. See below. Only available on non-Atmel chips.                                    |
+|                     0xA0 | Prepare to write single data byte | Next write must be a write of a single byte. Only available on non-Atmel chips.                                                                                                                                                      |
+|                     0xB0 | Set memory bank                   | Only works on 128KB flash devices, which are represented as two 64KB banks. 64KB flash devices don't support bank switching, for reasons that should be obvious.                                                                     |
 
 *** 0x90 Enter Chip Identification mode
 In chip identification mode, the data in 0x0E000000 and 0x0E000001 are replaced by the flash chip's manufacturer and device ID, as specified in the "Stubbing Flash" section below.
@@ -123,12 +123,23 @@ If you want to test games like Pokémon Emerald in your emulator, but aren't qui
 
 In your memory bus, simply return the following values on 8-bit reads to the specified addresses.
 
+For 128K flash, Sanyo IDs:
+
 | 8-bit read address | Value | Meaning               |
 |--------------------+-------+-----------------------|
 |         0x0E000000 |  0x62 | Sanyo manufacturer ID |
 |         0x0E000001 |  0x13 | Sanyo device ID       |
 
+For 64K flash, Panasonic IDs:
+
+| 8-bit read address | Value | Meaning               |
+|--------------------+-------+-----------------------|
+|         0x0E000000 |  0x1B | Panasonic manufacturer ID |
+|         0x0E000001 |  0x32 | Panasonic device ID       |
+
 And with that, you should have enough information to implement flash backups in your emulator.
 
 * EEPROM
 Coming soon!
+
+[[https://densinh.github.io/DenSinH/emulation/2021/02/01/gba-eeprom.html][Explained here]]
