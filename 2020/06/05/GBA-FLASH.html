@@ -70,8 +70,7 @@
 <p>See <a href="http://problemkaputt.de/gbatek.htm#gbacartbackupflashrom">the section in GBATek.</a></p>
 <p>Flash memory in GBA carts has the advantage of being non-volatile, meaning it doesn&#8217;t need a battery in the cartridge to keep your progress safe. The chips did have a limited number of write cycles, though this isn&#8217;t something an emulator developer needs to worry about.</p>
 <p>There were several chips that Nintendo used for Flash, all made by different manufacturers. GBATek lists them all.</p>
-<p><b>Important:</b> You do NOT need to simulate all the different chips! When a developer shipped their code off to Nintendo to be put in a cartridge, they did <b>NOT</b> know what type of chip it would be manufactured with! Different production runs of the same game could even use different manufacturer&#8217;s chips! As a consequence of this, all games should support <i>all Flash types.</i> This means that your emulator need only support one type per size. I chose Sanyo for 128K and Panasonic for 64K, as you can see below in the &#8220;Stubbing Flash&#8221; section.</p>
-<p>Note: Mother 3 requires an SST Flash chip.</p>
+<p><b>Important:</b> You do NOT need to simulate all the different chips! When a developer shipped their code off to Nintendo to be put in a cartridge, they did <b>NOT</b> know what type of chip it would be manufactured with! Different production runs of the same game could even use different manufacturer&#8217;s chips! As a consequence of this, all games should support <i>all Flash types.</i> I&#8217;m sure there are exceptions, but this means that your emulator need only support one type per size. I chose Sanyo for 128K and Panasonic for 64K, as you can see below in the &#8220;Stubbing Flash&#8221; section.</p>
 <p>As a downside, accessing it is significantly more complicated than for SRAM. The main loop the game will use is made up of sending the chip commands, and taking actions.</p>
 <p>Because the commands and actions are taken separately, it can (and should) be implemented as a state machine. This means you&#8217;ll need to hold state somewhere of what the Flash chip is currently doing, and treat reads and writes differently based on this state.</p>
 <h2>Sending Flash commands</h2>
@@ -136,8 +135,8 @@
 <p>For 64K flash, Panasonic IDs:</p>
 <table>
   <tr><th>8-bit read address</th><th>Value</th><th>Meaning</th></tr>
-  <tr><td>0x0E000000</td><td>0x1B</td><td>Panasonic manufacturer ID</td></tr>
-  <tr><td>0x0E000001</td><td>0x32</td><td>Panasonic device ID</td></tr>
+  <tr><td>0x0E000000</td><td>0x32</td><td>Panasonic manufacturer ID</td></tr>
+  <tr><td>0x0E000001</td><td>0x1B</td><td>Panasonic device ID</td></tr>
 </table>
 <p>And with that, you should have enough information to implement flash backups in your emulator.</p>
 <h1>EEPROM</h1>
