@@ -43,7 +43,10 @@ Flash memory in GBA carts has the advantage of being non-volatile, meaning it do
 
 There were several chips that Nintendo used for Flash, all made by different manufacturers. GBATek lists them all.
 
-*Important:* You do NOT need to simulate all the different chips! When a developer shipped their code off to Nintendo to be put in a cartridge, they did *NOT* know what type of chip it would be manufactured with! Different production runs of the same game could even use different manufacturer's chips! As a consequence of this, all games should support /all Flash types./ I'm sure there are exceptions, but this means that your emulator need only support one type per size. I chose Sanyo for 128K and Panasonic for 64K, as you can see below in the "Stubbing Flash" section.
+*Important:* You do NOT need to simulate all the different chips! When a developer shipped their code off to Nintendo to be put in a cartridge, they did *NOT* know what type of chip it would be manufactured with! Different production runs of the same game could even use different manufacturer's chips! As a consequence of this, all games should support /all Flash types./ This means that your emulator need only support one type per size. I chose Sanyo for 128K and Panasonic for 64K, as you can see below in the "Stubbing Flash" section.
+
+Note: Mother 3 requires an SST Flash chip.
+
 
 As a downside, accessing it is significantly more complicated than for SRAM. The main loop the game will use is made up of sending the chip commands, and taking actions.
 
@@ -140,6 +143,5 @@ For 64K flash, Panasonic IDs:
 And with that, you should have enough information to implement flash backups in your emulator.
 
 * EEPROM
-Coming soon!
 
 [[https://densinh.github.io/DenSinH/emulation/2021/02/01/gba-eeprom.html][Explained here]]
